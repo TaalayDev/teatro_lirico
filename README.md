@@ -63,4 +63,3 @@ lib/
 - The game uses `CustomPainter` for all rendering — no game engine dependency needed.
 - Background music (strings, brass, timpani) is scheduled via `SynthKitTransport`.
 - Vocal notes are triggered live when the player hits correctly.
-- Linux is not supported by synthkit at this time.

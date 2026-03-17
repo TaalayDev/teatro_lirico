@@ -196,11 +196,6 @@ class _GameScreenState extends State<GameScreen>
     _postActTimer = Timer(const Duration(seconds: 12), () async {
       if (!mounted) return;
       await _audio.stopClapping();
-      if (_state == GameState.intermission) {
-        final nextAct = _currentAct + 1;
-        final interlude = interludeTracks[nextAct % interludeTracks.length];
-        await _audio.playInterlude(interlude);
-      }
       if (!mounted) return;
       setState(() => _showPostActContinue = true);
     });
@@ -523,6 +518,28 @@ class _GameScreenState extends State<GameScreen>
     return fracs[lane.clamp(0, 3)];
   }
 
+  String _actLabel(int index) {
+    const labels = [
+      'I',
+      'II',
+      'III',
+      'IV',
+      'V',
+      'VI',
+      'VII',
+      'VIII',
+      'IX',
+      'X',
+      'XI',
+      'XII',
+      'XIII',
+      'XIV',
+      'XV',
+      'XVI',
+    ];
+    return labels[index.clamp(0, labels.length - 1)];
+  }
+
   void _handleKeyEvent(KeyEvent event) {
     final lane = _keyToLane[event.logicalKey];
     if (lane == null) return;
@@ -537,7 +554,6 @@ class _GameScreenState extends State<GameScreen>
   // ─── UI WIDGETS ─────────────────────────────────────────
 
   Widget _buildHUD() {
-    final actLabels = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'];
     final actName = tracks[_currentAct].name;
     return Positioned(
       top: 12,
@@ -559,7 +575,7 @@ class _GameScreenState extends State<GameScreen>
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'ACT ${actLabels[_currentAct]}',
+                  'ACT ${_actLabel(_currentAct)}',
                   style: const TextStyle(
                     fontFamily: 'Cinzel',
                     fontSize: 11,
@@ -628,7 +644,6 @@ class _GameScreenState extends State<GameScreen>
   }
 
   Widget _buildMainMenu() {
-    final actLabels = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'];
     final difficulties = [
       'Facile',
       'Moderato',
@@ -639,6 +654,10 @@ class _GameScreenState extends State<GameScreen>
       'Estremo',
       'Incubo',
       'Divino',
+      'Celestiale',
+      'Imperiale',
+      'Leggendario',
+      'Apocalittico',
     ];
     final diffColors = [
       const Color(0xFF90EE90),
@@ -650,6 +669,10 @@ class _GameScreenState extends State<GameScreen>
       const Color(0xFFFF3333),
       const Color(0xFFFF44FF),
       const Color(0xFFFFFFFF),
+      const Color(0xFFBDE0FE),
+      const Color(0xFFFFD166),
+      const Color(0xFFA7F3D0),
+      const Color(0xFFFFA69E),
     ];
 
     return Container(
@@ -800,11 +823,13 @@ class _GameScreenState extends State<GameScreen>
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 8),
                       child: _actListItem(
-                        label: 'ACT ${actLabels[i]}',
+                        label: 'ACT ${_actLabel(i)}',
                         title: tracks[i].name,
                         bpm: tracks[i].bpm,
-                        difficulty: difficulties[i],
-                        diffColor: diffColors[i],
+                        difficulty:
+                            difficulties[i.clamp(0, difficulties.length - 1)],
+                        diffColor:
+                            diffColors[i.clamp(0, diffColors.length - 1)],
                         actColor: tracks[i].color,
                         theme: tracks[i].theme,
                         onTap: () => _startAct(i),
@@ -950,7 +975,6 @@ class _GameScreenState extends State<GameScreen>
   }
 
   Widget _buildIntermission() {
-    final actLabels = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'];
     final nextAct = _currentAct + 1;
     final total = _hits.perfect + _hits.good + _hits.miss;
     final accuracy =
@@ -997,7 +1021,7 @@ class _GameScreenState extends State<GameScreen>
             ),
             const SizedBox(height: 4),
             Text(
-              'ACT ${actLabels[_currentAct]}  ·  ${tracks[_currentAct].name}',
+              'ACT ${_actLabel(_currentAct)}  ·  ${tracks[_currentAct].name}',
               style: const TextStyle(
                 fontFamily: 'Cinzel',
                 fontSize: 16,
@@ -1083,7 +1107,7 @@ class _GameScreenState extends State<GameScreen>
             // Next act preview
             if (nextAct < tracks.length) ...[
               Text(
-                'NEXT  ·  ACT ${actLabels[nextAct]}  ·  ${tracks[nextAct].name}',
+                'NEXT  ·  ACT ${_actLabel(nextAct)}  ·  ${tracks[nextAct].name}',
                 style: const TextStyle(
                   fontFamily: 'Cinzel',
                   fontSize: 12,
@@ -1095,7 +1119,7 @@ class _GameScreenState extends State<GameScreen>
             ],
             if (_showPostActContinue)
               _goldButton(
-                'PROCEED TO ACT ${actLabels[nextAct]}',
+                'PROCEED TO ACT ${_actLabel(nextAct)}',
                 () => _startAct(nextAct),
               )
             else

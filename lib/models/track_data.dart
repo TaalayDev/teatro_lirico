@@ -83,6 +83,45 @@ const tracks = <Track>[
     timpani: ['0:0', '2:0'],
   ),
 
+  // ─── Act III · Sotto La Luna ── G minor, 84 BPM, MEDIUM · CLASSIC ──
+  // A moonlit bridge act with smoother phrasing and wider melodic arcs.
+  Track(
+    name: 'Sotto La Luna',
+    bpm: 84,
+    loops: 4,
+    color: Color(0xFF8D99AE),
+    theme: StageTheme.classic,
+    melody: [
+      MelodyEvent('0:0', 'G4', '4n'),
+      MelodyEvent('0:1', 'Bb4', '4n'),
+      MelodyEvent('0:2', 'D5', '2n'),
+      MelodyEvent('1:0', 'F5', '4n'),
+      MelodyEvent('1:1', 'Eb5', '4n'),
+      MelodyEvent('1:2', 'D5', '4n'),
+      MelodyEvent('1:3', 'Bb4', '4n'),
+      MelodyEvent('2:0', 'A4', '4n'),
+      MelodyEvent('2:1', 'C5', '4n'),
+      MelodyEvent('2:2', 'D5', '2n'),
+      MelodyEvent('3:0', 'G5', '4n'),
+      MelodyEvent('3:1', 'F5', '4n'),
+      MelodyEvent('3:2', 'D5', '2n'),
+    ],
+    chords: [
+      ChordEvent('0:0', ['G3', 'Bb3', 'D4', 'G4'], '1m'),
+      ChordEvent('1:0', ['Eb3', 'G3', 'Bb3', 'Eb4'], '1m'),
+      ChordEvent('2:0', ['C3', 'Eb3', 'G3', 'C4'], '1m'),
+      ChordEvent('3:0', ['D3', 'F#3', 'A3', 'D4'], '1m'),
+    ],
+    brass: [
+      BrassEvent('0:0', ['G2', 'D3', 'G3'], '2n'),
+      BrassEvent('0:2', ['Bb2', 'D3'], '2n'),
+      BrassEvent('1:0', ['Eb2', 'Bb2', 'Eb3'], '1m'),
+      BrassEvent('2:0', ['C2', 'G2', 'C3'], '1m'),
+      BrassEvent('3:0', ['D2', 'A2', 'D3'], '1m'),
+    ],
+    timpani: ['0:0', '1:2', '3:0'],
+  ),
+
   // ─── Act III · Il Giudizio ── G minor, 90 BPM, MEDIUM · GOTHIC ──
   // Judgment day.  Driving quarter notes across all 4 lanes.
   Track(
@@ -167,6 +206,48 @@ const tracks = <Track>[
       BrassEvent('3:0', ['E1', 'B1', 'E2', 'G#2'], '1m'),
     ],
     timpani: ['0:0', '0:2', '1:0', '1:2', '2:0', '2:2', '3:0', '3:2'],
+  ),
+
+  // ─── Act VI · Ballo delle Maschere ── C minor, 110 BPM, HARD · GOTHIC ──
+  // A tense masked dance with alternating leaps and response phrases.
+  Track(
+    name: 'Ballo delle Maschere',
+    bpm: 110,
+    loops: 4,
+    color: Color(0xFFC084FC),
+    theme: StageTheme.gothic,
+    melody: [
+      MelodyEvent('0:0', 'C5', '4n'),
+      MelodyEvent('0:1', 'Eb5', '4n'),
+      MelodyEvent('0:2', 'G5', '4n'),
+      MelodyEvent('0:3', 'Bb5', '4n'),
+      MelodyEvent('1:0', 'Ab5', '4n'),
+      MelodyEvent('1:1', 'G5', '4n'),
+      MelodyEvent('1:2', 'F5', '4n'),
+      MelodyEvent('1:3', 'Eb5', '4n'),
+      MelodyEvent('2:0', 'D5', '4n'),
+      MelodyEvent('2:1', 'F5', '4n'),
+      MelodyEvent('2:2', 'G5', '4n'),
+      MelodyEvent('2:3', 'Ab5', '4n'),
+      MelodyEvent('3:0', 'G5', '4n'),
+      MelodyEvent('3:1', 'F5', '4n'),
+      MelodyEvent('3:2', 'Eb5', '4n'),
+      MelodyEvent('3:3', 'C5', '4n'),
+    ],
+    chords: [
+      ChordEvent('0:0', ['C3', 'Eb3', 'G3', 'C4'], '1m'),
+      ChordEvent('1:0', ['Ab2', 'C3', 'Eb3', 'Ab3'], '1m'),
+      ChordEvent('2:0', ['F2', 'Ab2', 'C3', 'F3'], '1m'),
+      ChordEvent('3:0', ['G2', 'B2', 'D3', 'F3'], '1m'),
+    ],
+    brass: [
+      BrassEvent('0:0', ['C2', 'G2', 'C3'], '2n'),
+      BrassEvent('0:2', ['Eb2', 'G2'], '2n'),
+      BrassEvent('1:0', ['Ab1', 'Eb2', 'Ab2'], '2n'),
+      BrassEvent('2:0', ['F1', 'C2', 'F2'], '2n'),
+      BrassEvent('3:0', ['G1', 'D2', 'G2'], '1m'),
+    ],
+    timpani: ['0:0', '0:2', '1:0', '2:0', '3:0'],
   ),
 
   // ─── Act V · Il Trionfo ── D major, 116 BPM, HARD · STEAMPUNK ───
@@ -282,6 +363,48 @@ const tracks = <Track>[
       '3:0',
       '3:2',
     ],
+  ),
+
+  // ─── Act IX · Marcia degli Astri ── E minor, 134 BPM, VERY HARD · CLASSIC ──
+  // A rising march that bridges the late-game acts with cleaner heroic motion.
+  Track(
+    name: 'Marcia degli Astri',
+    bpm: 134,
+    loops: 4,
+    color: Color(0xFF67E8F9),
+    theme: StageTheme.classic,
+    melody: [
+      MelodyEvent('0:0', 'E5', '4n'),
+      MelodyEvent('0:1', 'B5', '4n'),
+      MelodyEvent('0:2', 'G5', '4n'),
+      MelodyEvent('0:3', 'E6', '4n'),
+      MelodyEvent('1:0', 'D6', '4n'),
+      MelodyEvent('1:1', 'B5', '4n'),
+      MelodyEvent('1:2', 'A5', '4n'),
+      MelodyEvent('1:3', 'G5', '4n'),
+      MelodyEvent('2:0', 'F#5', '4n'),
+      MelodyEvent('2:1', 'A5', '4n'),
+      MelodyEvent('2:2', 'B5', '4n'),
+      MelodyEvent('2:3', 'D6', '4n'),
+      MelodyEvent('3:0', 'E6', '4n'),
+      MelodyEvent('3:1', 'D6', '4n'),
+      MelodyEvent('3:2', 'B5', '4n'),
+      MelodyEvent('3:3', 'E5', '4n'),
+    ],
+    chords: [
+      ChordEvent('0:0', ['E3', 'G3', 'B3', 'E4'], '1m'),
+      ChordEvent('1:0', ['D3', 'F#3', 'A3', 'D4'], '1m'),
+      ChordEvent('2:0', ['G3', 'B3', 'D4', 'G4'], '1m'),
+      ChordEvent('3:0', ['B2', 'D#3', 'F#3', 'A3'], '1m'),
+    ],
+    brass: [
+      BrassEvent('0:0', ['E2', 'B2', 'E3'], '2n'),
+      BrassEvent('0:2', ['G2', 'B2'], '2n'),
+      BrassEvent('1:0', ['D2', 'A2', 'D3'], '2n'),
+      BrassEvent('2:0', ['G2', 'D3', 'G3'], '2n'),
+      BrassEvent('3:0', ['B1', 'F#2', 'B2'], '1m'),
+    ],
+    timpani: ['0:0', '1:0', '2:0', '3:0'],
   ),
 
   // ─── Act VII · La Resurrezione ── E minor, 138 BPM, EXTREME · CLASSIC ─────
@@ -402,6 +525,48 @@ const tracks = <Track>[
     ],
   ),
 
+  // ─── Act XII · Cuore di Bronzo ── D minor, 150 BPM, NIGHTMARE · STEAMPUNK ──
+  // A forged-metal sprint with direct phrases and aggressive cadence pushes.
+  Track(
+    name: 'Cuore di Bronzo',
+    bpm: 150,
+    loops: 4,
+    color: Color(0xFFB45309),
+    theme: StageTheme.steampunk,
+    melody: [
+      MelodyEvent('0:0', 'D5', '4n'),
+      MelodyEvent('0:1', 'F5', '4n'),
+      MelodyEvent('0:2', 'A5', '4n'),
+      MelodyEvent('0:3', 'C6', '4n'),
+      MelodyEvent('1:0', 'Bb5', '4n'),
+      MelodyEvent('1:1', 'A5', '4n'),
+      MelodyEvent('1:2', 'F5', '4n'),
+      MelodyEvent('1:3', 'D5', '4n'),
+      MelodyEvent('2:0', 'G5', '4n'),
+      MelodyEvent('2:1', 'A5', '4n'),
+      MelodyEvent('2:2', 'Bb5', '4n'),
+      MelodyEvent('2:3', 'D6', '4n'),
+      MelodyEvent('3:0', 'C6', '4n'),
+      MelodyEvent('3:1', 'A5', '4n'),
+      MelodyEvent('3:2', 'F5', '4n'),
+      MelodyEvent('3:3', 'D5', '4n'),
+    ],
+    chords: [
+      ChordEvent('0:0', ['D3', 'F3', 'A3', 'D4'], '1m'),
+      ChordEvent('1:0', ['Bb2', 'D3', 'F3', 'Bb3'], '1m'),
+      ChordEvent('2:0', ['G2', 'Bb2', 'D3', 'G3'], '1m'),
+      ChordEvent('3:0', ['A2', 'C#3', 'E3', 'A3'], '1m'),
+    ],
+    brass: [
+      BrassEvent('0:0', ['D2', 'A2', 'D3'], '4n'),
+      BrassEvent('0:2', ['F2', 'A2'], '4n'),
+      BrassEvent('1:0', ['Bb1', 'F2', 'Bb2'], '2n'),
+      BrassEvent('2:0', ['G1', 'D2', 'G2'], '2n'),
+      BrassEvent('3:0', ['A1', 'E2', 'A2'], '1m'),
+    ],
+    timpani: ['0:0', '0:2', '1:0', '2:0', '3:0'],
+  ),
+
   // ─── Act IX · L'Ultima Battaglia ── A minor, 158 BPM, MAXIMUM · STEAMPUNK ──
   // The last battle.  Maximum BPM, all 4 lanes every beat, relentless fire.
   Track(
@@ -470,93 +635,5 @@ const tracks = <Track>[
       '3:2',
       '3:3',
     ],
-  ),
-];
-
-const interludeTracks = <Track>[
-  Track(
-    name: 'Intermezzo della Luna',
-    bpm: 72,
-    loops: 3,
-    color: Color(0xFF8D99AE),
-    theme: StageTheme.classic,
-    melody: [],
-    chords: [
-      ChordEvent('0:0', ['D3', 'F3', 'A3', 'D4'], '1m'),
-      ChordEvent('1:0', ['Bb2', 'D3', 'F3', 'Bb3'], '1m'),
-      ChordEvent('2:0', ['G2', 'Bb2', 'D3', 'G3'], '1m'),
-      ChordEvent('3:0', ['A2', 'C#3', 'E3', 'G3'], '1m'),
-    ],
-    brass: [
-      BrassEvent('0:0', ['D2', 'A2'], '1m'),
-      BrassEvent('1:0', ['Bb1', 'F2'], '1m'),
-      BrassEvent('2:0', ['G1', 'D2'], '1m'),
-      BrassEvent('3:0', ['A1', 'E2', 'C#3'], '1m'),
-    ],
-    timpani: ['0:0', '2:0'],
-  ),
-  Track(
-    name: 'Intermezzo di Velluto',
-    bpm: 82,
-    loops: 3,
-    color: Color(0xFFC9A227),
-    theme: StageTheme.classic,
-    melody: [],
-    chords: [
-      ChordEvent('0:0', ['Eb3', 'G3', 'Bb3', 'Eb4'], '1m'),
-      ChordEvent('1:0', ['C3', 'Eb3', 'G3', 'Bb3'], '1m'),
-      ChordEvent('2:0', ['Ab2', 'C3', 'Eb3', 'Ab3'], '1m'),
-      ChordEvent('3:0', ['Bb2', 'D3', 'F3', 'Ab3'], '1m'),
-    ],
-    brass: [
-      BrassEvent('0:0', ['Eb2', 'Bb2', 'Eb3'], '2n'),
-      BrassEvent('0:2', ['G2', 'Bb2'], '2n'),
-      BrassEvent('2:0', ['Ab1', 'Eb2', 'Ab2'], '2n'),
-      BrassEvent('3:0', ['Bb1', 'F2', 'Bb2'], '1m'),
-    ],
-    timpani: ['0:0', '3:0'],
-  ),
-  Track(
-    name: 'Intermezzo delle Ombre',
-    bpm: 88,
-    loops: 3,
-    color: Color(0xFF6B7280),
-    theme: StageTheme.gothic,
-    melody: [],
-    chords: [
-      ChordEvent('0:0', ['G3', 'Bb3', 'D4', 'G4'], '1m'),
-      ChordEvent('1:0', ['Eb3', 'G3', 'Bb3', 'Eb4'], '1m'),
-      ChordEvent('2:0', ['C3', 'Eb3', 'G3', 'C4'], '1m'),
-      ChordEvent('3:0', ['D3', 'F#3', 'A3', 'D4'], '1m'),
-    ],
-    brass: [
-      BrassEvent('0:0', ['G1', 'D2', 'G2'], '2n'),
-      BrassEvent('0:2', ['Bb1', 'D2'], '2n'),
-      BrassEvent('2:0', ['C2', 'G2', 'C3'], '2n'),
-      BrassEvent('3:0', ['D2', 'A2', 'D3'], '1m'),
-    ],
-    timpani: ['0:0', '1:2', '3:0'],
-  ),
-  Track(
-    name: 'Intermezzo degli Ingranaggi',
-    bpm: 96,
-    loops: 3,
-    color: Color(0xFFB45309),
-    theme: StageTheme.steampunk,
-    melody: [],
-    chords: [
-      ChordEvent('0:0', ['D3', 'F#3', 'A3', 'D4'], '1m'),
-      ChordEvent('1:0', ['B2', 'D3', 'F#3', 'B3'], '1m'),
-      ChordEvent('2:0', ['G2', 'B2', 'D3', 'G3'], '1m'),
-      ChordEvent('3:0', ['A2', 'C#3', 'E3', 'A3'], '1m'),
-    ],
-    brass: [
-      BrassEvent('0:0', ['D2', 'A2', 'D3'], '2n'),
-      BrassEvent('0:2', ['F#2', 'A2'], '2n'),
-      BrassEvent('1:0', ['B1', 'F#2', 'B2'], '2n'),
-      BrassEvent('2:0', ['G1', 'D2', 'G2'], '2n'),
-      BrassEvent('3:0', ['A1', 'E2', 'A2'], '1m'),
-    ],
-    timpani: ['0:0', '0:2', '2:0', '3:0'],
   ),
 ];

@@ -304,11 +304,6 @@ class AudioEngine {
     await _engine.transport.start();
   }
 
-  Future<void> playInterlude(Track track) async {
-    await scheduleAct(track);
-    await startPlayback();
-  }
-
   /// Stop transport playback.
   Future<void> pausePlayback() async {
     await _engine.transport.stop(clearSequence: false);
