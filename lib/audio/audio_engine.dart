@@ -311,6 +311,7 @@ class AudioEngine {
 
   Future<void> playClapping() async {
     await _applausePlayer.stop();
+    await _applausePlayer.setVolume(0.32);
     await _applausePlayer.setReleaseMode(ReleaseMode.stop);
     await _applausePlayer.play(AssetSource('clapping.mp3'));
   }

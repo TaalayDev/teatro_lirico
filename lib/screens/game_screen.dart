@@ -7,6 +7,7 @@ import '../models/game_models.dart';
 import '../models/track_data.dart';
 import '../painters/concert_painter.dart';
 import '../painters/rhythm_painter.dart';
+import '../painters/singer_notes_painter.dart';
 
 /// Lane ↔ key mapping (same order as the web version).
 final _keyToLane = {
@@ -26,8 +27,7 @@ class GameScreen extends StatefulWidget {
   State<GameScreen> createState() => _GameScreenState();
 }
 
-class _GameScreenState extends State<GameScreen>
-    with SingleTickerProviderStateMixin {
+class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateMixin {
   // ── Audio ────────────────────────────────────────────────
   final AudioEngine _audio = AudioEngine();
 
@@ -56,11 +56,11 @@ class _GameScreenState extends State<GameScreen>
   // ── Curtain animation ────────────────────────────────────
   static const _curtainDuration = 2.8; // seconds to fully open
   final Stopwatch _curtainWatch = Stopwatch();
-  double get _curtainProgress =>
-      (_curtainWatch.elapsedMilliseconds / 1000.0 / _curtainDuration).clamp(
-        0.0,
-        1.0,
-      );
+  bool _curtainsClosing = false;
+  double get _curtainProgress {
+    final progress = (_curtainWatch.elapsedMilliseconds / 1000.0 / _curtainDuration).clamp(0.0, 1.0);
+    return _curtainsClosing ? 1.0 - progress : progress;
+  }
 
   // ── Animation ───────────────────────────────────────────
   late final Ticker _ticker;
@@ -85,8 +85,22 @@ class _GameScreenState extends State<GameScreen>
 
   // ─── TICK (every frame) ─────────────────────────────────
   void _onTick(Duration _) {
-    if (_state != GameState.playing) return;
     final t = _elapsed;
+
+    if (_curtainWatch.isRunning && _curtainsClosing) {
+      if (_curtainProgress <= 0) {
+        _curtainWatch.stop();
+        // Don't stop clapping here — let it play to its natural end.
+        // _startAct() will stop it if the player proceeds early.
+        if (!_showPostActContinue) {
+          setState(() => _showPostActContinue = true);
+        }
+      } else {
+        setState(() {});
+      }
+    }
+
+    if (_state != GameState.playing) return;
 
     // Check act end
     if (t >= _trackDuration + 2) {
@@ -110,10 +124,7 @@ class _GameScreenState extends State<GameScreen>
         }
       }
       // Long-note completion bonus
-      if (n.hit &&
-          !n.releasedEarly &&
-          t >= n.endTime &&
-          !n.completedScoreGiven) {
+      if (n.hit && !n.releasedEarly && t >= n.endTime && !n.completedScoreGiven) {
         n.completedScoreGiven = true;
         if (n.duration >= 0.3) {
           _score += 50;
@@ -158,6 +169,7 @@ class _GameScreenState extends State<GameScreen>
     _curtainWatch
       ..stop()
       ..reset();
+    _curtainsClosing = false;
 
     final result = await _audio.scheduleAct(tracks[actIndex]);
     _notes = result.notes;
@@ -178,7 +190,11 @@ class _GameScreenState extends State<GameScreen>
 
   void _endAct() {
     _stopwatch.stop();
-    _curtainWatch.stop();
+    _curtainWatch
+      ..stop()
+      ..reset()
+      ..start();
+    _curtainsClosing = true;
     _audio.pausePlayback();
 
     _postActTimer?.cancel();
@@ -192,13 +208,6 @@ class _GameScreenState extends State<GameScreen>
     } else {
       setState(() => _state = GameState.finale);
     }
-
-    _postActTimer = Timer(const Duration(seconds: 12), () async {
-      if (!mounted) return;
-      await _audio.stopClapping();
-      if (!mounted) return;
-      setState(() => _showPostActContinue = true);
-    });
   }
 
   // ─── INPUT: KEY DOWN ────────────────────────────────────
@@ -238,10 +247,7 @@ class _GameScreenState extends State<GameScreen>
       }
       _spawnParticles(lane);
 
-      _audio.triggerVocal(
-        target.noteName,
-        Duration(milliseconds: (target.duration * 1000).toInt()),
-      );
+      _audio.triggerVocal(target.noteName, Duration(milliseconds: (target.duration * 1000).toInt()));
     } else {
       _combo = 0;
       _addFeedback(lane, 'MISS', Colors.red);
@@ -256,10 +262,7 @@ class _GameScreenState extends State<GameScreen>
     final t = _elapsed;
 
     for (final n in _notes) {
-      if (n.lane == lane &&
-          n.hit &&
-          !n.releasedEarly &&
-          !n.completedScoreGiven) {
+      if (n.lane == lane && n.hit && !n.releasedEarly && !n.completedScoreGiven) {
         if (n.duration >= 0.3 && t < n.endTime - 0.1) {
           n.releasedEarly = true;
           _combo = 0;
@@ -272,12 +275,7 @@ class _GameScreenState extends State<GameScreen>
 
   // ─── HELPERS ────────────────────────────────────────────
   Color _laneColor(int lane) {
-    const c = [
-      Color(0xFFC1121F),
-      Color(0xFFFDF5A9),
-      Color(0xFF4CAF50),
-      Color(0xFF2196F3),
-    ];
+    const c = [Color(0xFFC1121F), Color(0xFFFDF5A9), Color(0xFF4CAF50), Color(0xFF2196F3)];
     return c[lane.clamp(0, 3)];
   }
 
@@ -313,21 +311,14 @@ class _GameScreenState extends State<GameScreen>
   }
 
   void _spawnTapParticle(int lane) {
-    _particles.add(
-      Particle(
-        x: lane.toDouble(),
-        y: 0,
-        color: Colors.white,
-        speed: 4,
-        size: 8,
-      ),
-    );
+    _particles.add(Particle(x: lane.toDouble(), y: 0, color: Colors.white, speed: 4, size: 8));
   }
 
   String _currentSingerAsset() {
     final singerNumber = (_currentAct % 3) + 1;
     final stateSuffix = switch (_state) {
-      GameState.intermission || GameState.finale => 'bow',
+      // Show bow once the curtain has fully closed (progress reaches 0).
+      GameState.intermission || GameState.finale when _curtainProgress <= 0 => 'bow',
       GameState.playing when _singerActive => 'sing',
       _ => '',
     };
@@ -346,7 +337,7 @@ class _GameScreenState extends State<GameScreen>
           padding: EdgeInsets.only(bottom: height * 0.18),
           child: Image.asset(
             _currentSingerAsset(),
-            width: width * 0.24,
+            width: height * 0.24,
             fit: BoxFit.contain,
             filterQuality: FilterQuality.high,
           ),
@@ -392,50 +383,33 @@ class _GameScreenState extends State<GameScreen>
                             CustomPaint(
                               painter: ConcertPainter(
                                 time: _elapsed,
-                                actColor:
-                                    _state == GameState.playing
-                                        ? tracks[_currentAct].color
-                                        : const Color(0xFFC1121F),
-                                bpm:
-                                    _state == GameState.playing
-                                        ? tracks[_currentAct].bpm
-                                        : 70,
+                                actColor: tracks[_currentAct].color,
+                                bpm: tracks[_currentAct].bpm,
                                 singerActive: _singerActive,
                                 actIndex: _currentAct,
-                                stageTheme:
-                                    _state == GameState.playing
-                                        ? tracks[_currentAct].theme
-                                        : StageTheme.classic,
+                                stageTheme: tracks[_currentAct].theme,
                                 paintForeground: false,
-                                curtainOpenProgress:
-                                    _state == GameState.playing
-                                        ? _curtainProgress
-                                        : 1.0,
+                                curtainOpenProgress: _curtainProgress,
                               ),
                             ),
                             _buildSingerSprite(concertW, h),
                             CustomPaint(
+                              painter: SingerNotesPainter(
+                                time: _elapsed,
+                                actColor: tracks[_currentAct].color,
+                                singerActive: _singerActive,
+                              ),
+                            ),
+                            CustomPaint(
                               painter: ConcertPainter(
                                 time: _elapsed,
-                                actColor:
-                                    _state == GameState.playing
-                                        ? tracks[_currentAct].color
-                                        : const Color(0xFFC1121F),
-                                bpm:
-                                    _state == GameState.playing
-                                        ? tracks[_currentAct].bpm
-                                        : 70,
+                                actColor: tracks[_currentAct].color,
+                                bpm: tracks[_currentAct].bpm,
                                 singerActive: _singerActive,
                                 actIndex: _currentAct,
-                                stageTheme:
-                                    _state == GameState.playing
-                                        ? tracks[_currentAct].theme
-                                        : StageTheme.classic,
+                                stageTheme: tracks[_currentAct].theme,
                                 paintBackdrop: false,
-                                curtainOpenProgress:
-                                    _state == GameState.playing
-                                        ? _curtainProgress
-                                        : 1.0,
+                                curtainOpenProgress: _curtainProgress,
                               ),
                             ),
                           ],
@@ -562,10 +536,7 @@ class _GameScreenState extends State<GameScreen>
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           color: Colors.black.withValues(alpha: 0.62),
-          border: Border.all(
-            color: const Color(0xFFB89947).withValues(alpha: 0.7),
-            width: 1,
-          ),
+          border: Border.all(color: const Color(0xFFB89947).withValues(alpha: 0.7), width: 1),
           borderRadius: BorderRadius.circular(3),
         ),
         child: Column(
@@ -584,11 +555,7 @@ class _GameScreenState extends State<GameScreen>
                   ),
                 ),
                 const SizedBox(width: 8),
-                Container(
-                  width: 1,
-                  height: 10,
-                  color: const Color(0xFFB89947).withValues(alpha: 0.5),
-                ),
+                Container(width: 1, height: 10, color: const Color(0xFFB89947).withValues(alpha: 0.5)),
                 const SizedBox(width: 8),
                 Text(
                   actName,
@@ -608,11 +575,7 @@ class _GameScreenState extends State<GameScreen>
               children: [
                 _hudStat('✦', _score.toString(), const Color(0xFFFDF5A9)),
                 const SizedBox(width: 14),
-                _hudStat(
-                  '◎',
-                  _hits.perfect.toString(),
-                  const Color(0xFF90EE90),
-                ),
+                _hudStat('◎', _hits.perfect.toString(), const Color(0xFF90EE90)),
                 const SizedBox(width: 14),
                 _hudStat('✕', _hits.miss.toString(), const Color(0xFFFF6B6B)),
               ],
@@ -645,34 +608,40 @@ class _GameScreenState extends State<GameScreen>
 
   Widget _buildMainMenu() {
     final difficulties = [
-      'Facile',
-      'Moderato',
-      'Medio',
-      'Arduo',
-      'Difficile',
-      'Maestro',
-      'Estremo',
-      'Incubo',
-      'Divino',
-      'Celestiale',
-      'Imperiale',
-      'Leggendario',
-      'Apocalittico',
+      'Facile',       // 0  · 70 BPM
+      'Moderato',     // 1  · 76 BPM
+      'Leggero',      // 2  · 80 BPM  ← La Serenata
+      'Medio',        // 3  · 84 BPM
+      'Arduo',        // 4  · 90 BPM
+      'Difficile',    // 5  · 104 BPM
+      'Maestro',      // 6  · 107 BPM ← La Tempesta
+      'Estremo',      // 7  · 110 BPM
+      'Virtuoso',     // 8  · 116 BPM
+      'Incubo',       // 9  · 122 BPM ← L'Alba di Ferro
+      'Divino',       // 10 · 130 BPM
+      'Celestiale',   // 11 · 134 BPM
+      'Imperiale',    // 12 · 138 BPM
+      'Leggendario',  // 13 · 146 BPM
+      'Apocalittico', // 14 · 150 BPM
+      'Assoluto',     // 15 · 158 BPM
     ];
     final diffColors = [
-      const Color(0xFF90EE90),
-      const Color(0xFF7EC8E3),
-      const Color(0xFFFDF5A9),
-      const Color(0xFFFFB347),
-      const Color(0xFFFF6B6B),
-      const Color(0xFFE040FB),
-      const Color(0xFFFF3333),
-      const Color(0xFFFF44FF),
-      const Color(0xFFFFFFFF),
-      const Color(0xFFBDE0FE),
-      const Color(0xFFFFD166),
-      const Color(0xFFA7F3D0),
-      const Color(0xFFFFA69E),
+      const Color(0xFF90EE90), // Facile       — green
+      const Color(0xFF7EC8E3), // Moderato     — sky blue
+      const Color(0xFF4CC9A0), // Leggero      — teal
+      const Color(0xFFFDF5A9), // Medio        — yellow
+      const Color(0xFFFFB347), // Arduo        — orange
+      const Color(0xFFFF6B6B), // Difficile    — coral red
+      const Color(0xFF3D56B2), // Maestro      — storm blue
+      const Color(0xFFE040FB), // Estremo      — purple
+      const Color(0xFFFFD700), // Virtuoso     — gold
+      const Color(0xFFD4773A), // Incubo       — copper
+      const Color(0xFFFF3333), // Divino       — bright red
+      const Color(0xFFFF44FF), // Celestiale   — magenta
+      const Color(0xFFFFFFFF), // Imperiale    — white
+      const Color(0xFFBDE0FE), // Leggendario  — ice blue
+      const Color(0xFFFFA69E), // Apocalittico — salmon
+      const Color(0xFFFF0000), // Assoluto     — pure red
     ];
 
     return Container(
@@ -680,10 +649,7 @@ class _GameScreenState extends State<GameScreen>
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [
-            Colors.black.withValues(alpha: 0.92),
-            const Color(0xFF1A0000).withValues(alpha: 0.96),
-          ],
+          colors: [Colors.black.withValues(alpha: 0.92), const Color(0xFF1A0000).withValues(alpha: 0.96)],
         ),
       ),
       child: Center(
@@ -711,11 +677,7 @@ class _GameScreenState extends State<GameScreen>
                       shadows: [
                         Shadow(color: Color(0xFFB89947), blurRadius: 18),
                         Shadow(color: Color(0xFFB89947), blurRadius: 40),
-                        Shadow(
-                          color: Colors.black,
-                          offset: Offset(2, 3),
-                          blurRadius: 6,
-                        ),
+                        Shadow(color: Colors.black, offset: Offset(2, 3), blurRadius: 6),
                       ],
                     ),
                   ),
@@ -729,11 +691,7 @@ class _GameScreenState extends State<GameScreen>
                       color: Color(0xFFB89947),
                       shadows: [
                         Shadow(color: Color(0xFFC1121F), blurRadius: 20),
-                        Shadow(
-                          color: Colors.black,
-                          offset: Offset(2, 3),
-                          blurRadius: 6,
-                        ),
+                        Shadow(color: Colors.black, offset: Offset(2, 3), blurRadius: 6),
                       ],
                     ),
                   ),
@@ -755,10 +713,7 @@ class _GameScreenState extends State<GameScreen>
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       color: Colors.black.withValues(alpha: 0.5),
-                      border: Border.all(
-                        color: const Color(0xFFB89947).withValues(alpha: 0.4),
-                        width: 1,
-                      ),
+                      border: Border.all(color: const Color(0xFFB89947).withValues(alpha: 0.4), width: 1),
                     ),
                     child: Column(
                       children: [
@@ -775,11 +730,7 @@ class _GameScreenState extends State<GameScreen>
                         const Text(
                           'Press ARROW KEYS in time with the notes.\nHOLD for sustained phrases.',
                           textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Color(0xFFAAAAAA),
-                            height: 1.6,
-                          ),
+                          style: TextStyle(fontSize: 13, color: Color(0xFFAAAAAA), height: 1.6),
                         ),
                         const SizedBox(height: 16),
                         Row(
@@ -811,12 +762,7 @@ class _GameScreenState extends State<GameScreen>
                 children: [
                   const Text(
                     'SELECT YOUR ACT',
-                    style: TextStyle(
-                      fontFamily: 'Cinzel',
-                      fontSize: 12,
-                      letterSpacing: 4,
-                      color: Color(0xFFB89947),
-                    ),
+                    style: TextStyle(fontFamily: 'Cinzel', fontSize: 12, letterSpacing: 4, color: Color(0xFFB89947)),
                   ),
                   const SizedBox(height: 12),
                   ...List.generate(tracks.length, (i) {
@@ -826,10 +772,8 @@ class _GameScreenState extends State<GameScreen>
                         label: 'ACT ${_actLabel(i)}',
                         title: tracks[i].name,
                         bpm: tracks[i].bpm,
-                        difficulty:
-                            difficulties[i.clamp(0, difficulties.length - 1)],
-                        diffColor:
-                            diffColors[i.clamp(0, diffColors.length - 1)],
+                        difficulty: difficulties[i.clamp(0, difficulties.length - 1)],
+                        diffColor: diffColors[i.clamp(0, diffColors.length - 1)],
                         actColor: tracks[i].color,
                         theme: tracks[i].theme,
                         onTap: () => _startAct(i),
@@ -877,18 +821,9 @@ class _GameScreenState extends State<GameScreen>
             color: Colors.black.withValues(alpha: 0.55),
             border: Border(
               left: BorderSide(color: actColor, width: 3),
-              top: BorderSide(
-                color: const Color(0xFFB89947).withValues(alpha: 0.25),
-                width: 1,
-              ),
-              bottom: BorderSide(
-                color: const Color(0xFFB89947).withValues(alpha: 0.25),
-                width: 1,
-              ),
-              right: BorderSide(
-                color: const Color(0xFFB89947).withValues(alpha: 0.25),
-                width: 1,
-              ),
+              top: BorderSide(color: const Color(0xFFB89947).withValues(alpha: 0.25), width: 1),
+              bottom: BorderSide(color: const Color(0xFFB89947).withValues(alpha: 0.25), width: 1),
+              right: BorderSide(color: const Color(0xFFB89947).withValues(alpha: 0.25), width: 1),
             ),
           ),
           child: Row(
@@ -908,11 +843,7 @@ class _GameScreenState extends State<GameScreen>
                   ),
                 ),
               ),
-              Container(
-                width: 1,
-                height: 32,
-                color: const Color(0xFFB89947).withValues(alpha: 0.3),
-              ),
+              Container(width: 1, height: 32, color: const Color(0xFFB89947).withValues(alpha: 0.3)),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -930,19 +861,11 @@ class _GameScreenState extends State<GameScreen>
                     const SizedBox(height: 3),
                     Row(
                       children: [
-                        Text(
-                          themeLabel,
-                          style: TextStyle(fontSize: 10, color: themeColor),
-                        ),
+                        Text(themeLabel, style: TextStyle(fontSize: 10, color: themeColor)),
                         const SizedBox(width: 8),
                         Text(
                           '$bpm BPM',
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: const Color(
-                              0xFFB89947,
-                            ).withValues(alpha: 0.6),
-                          ),
+                          style: TextStyle(fontSize: 10, color: const Color(0xFFB89947).withValues(alpha: 0.6)),
                         ),
                       ],
                     ),
@@ -951,20 +874,10 @@ class _GameScreenState extends State<GameScreen>
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: diffColor.withValues(alpha: 0.6),
-                    width: 1,
-                  ),
-                ),
+                decoration: BoxDecoration(border: Border.all(color: diffColor.withValues(alpha: 0.6), width: 1)),
                 child: Text(
                   difficulty,
-                  style: TextStyle(
-                    fontFamily: 'Cinzel',
-                    fontSize: 10,
-                    letterSpacing: 1,
-                    color: diffColor,
-                  ),
+                  style: TextStyle(fontFamily: 'Cinzel', fontSize: 10, letterSpacing: 1, color: diffColor),
                 ),
               ),
             ],
@@ -977,8 +890,7 @@ class _GameScreenState extends State<GameScreen>
   Widget _buildIntermission() {
     final nextAct = _currentAct + 1;
     final total = _hits.perfect + _hits.good + _hits.miss;
-    final accuracy =
-        total > 0 ? ((_hits.perfect + _hits.good) / total * 100).round() : 0;
+    final accuracy = total > 0 ? ((_hits.perfect + _hits.good) / total * 100).round() : 0;
     final stars =
         accuracy >= 95
             ? 3
@@ -993,10 +905,7 @@ class _GameScreenState extends State<GameScreen>
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [
-                    const Color(0xFF0D0000).withValues(alpha: 0.97),
-                    Colors.black.withValues(alpha: 0.97),
-                  ],
+                  colors: [const Color(0xFF0D0000).withValues(alpha: 0.97), Colors.black.withValues(alpha: 0.97)],
                 ),
               )
               : null,
@@ -1042,19 +951,8 @@ class _GameScreenState extends State<GameScreen>
                     i < stars ? '★' : '☆',
                     style: TextStyle(
                       fontSize: 36,
-                      color:
-                          i < stars
-                              ? const Color(0xFFFFD700)
-                              : const Color(0xFF555544),
-                      shadows:
-                          i < stars
-                              ? const [
-                                Shadow(
-                                  color: Color(0xFFFFD700),
-                                  blurRadius: 12,
-                                ),
-                              ]
-                              : null,
+                      color: i < stars ? const Color(0xFFFFD700) : const Color(0xFF555544),
+                      shadows: i < stars ? const [Shadow(color: Color(0xFFFFD700), blurRadius: 12)] : null,
                     ),
                   ),
                 ),
@@ -1067,37 +965,17 @@ class _GameScreenState extends State<GameScreen>
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 color: Colors.black.withValues(alpha: 0.6),
-                border: Border.all(
-                  color: const Color(0xFFB89947).withValues(alpha: 0.5),
-                  width: 1,
-                ),
+                border: Border.all(color: const Color(0xFFB89947).withValues(alpha: 0.5), width: 1),
               ),
               child: Column(
                 children: [
-                  _scoreRow(
-                    'SCORE',
-                    _score.toString(),
-                    const Color(0xFFFDF5A9),
-                    large: true,
-                  ),
+                  _scoreRow('SCORE', _score.toString(), const Color(0xFFFDF5A9), large: true),
                   const Divider(color: Color(0x44B89947), height: 20),
-                  _scoreRow(
-                    'PERFECT',
-                    _hits.perfect.toString(),
-                    const Color(0xFF90EE90),
-                  ),
+                  _scoreRow('PERFECT', _hits.perfect.toString(), const Color(0xFF90EE90)),
                   const SizedBox(height: 8),
-                  _scoreRow(
-                    'GOOD',
-                    _hits.good.toString(),
-                    const Color(0xFFFDF5A9),
-                  ),
+                  _scoreRow('GOOD', _hits.good.toString(), const Color(0xFFFDF5A9)),
                   const SizedBox(height: 8),
-                  _scoreRow(
-                    'MISS',
-                    _hits.miss.toString(),
-                    const Color(0xFFFF6B6B),
-                  ),
+                  _scoreRow('MISS', _hits.miss.toString(), const Color(0xFFFF6B6B)),
                   const Divider(color: Color(0x44B89947), height: 20),
                   _scoreRow('ACCURACY', '$accuracy%', const Color(0xFFB89947)),
                 ],
@@ -1108,29 +986,16 @@ class _GameScreenState extends State<GameScreen>
             if (nextAct < tracks.length) ...[
               Text(
                 'NEXT  ·  ACT ${_actLabel(nextAct)}  ·  ${tracks[nextAct].name}',
-                style: const TextStyle(
-                  fontFamily: 'Cinzel',
-                  fontSize: 12,
-                  letterSpacing: 2,
-                  color: Color(0xFF888866),
-                ),
+                style: const TextStyle(fontFamily: 'Cinzel', fontSize: 12, letterSpacing: 2, color: Color(0xFF888866)),
               ),
               const SizedBox(height: 16),
             ],
             if (_showPostActContinue)
-              _goldButton(
-                'PROCEED TO ACT ${_actLabel(nextAct)}',
-                () => _startAct(nextAct),
-              )
+              _goldButton('PROCEED TO ACT ${_actLabel(nextAct)}', () => _startAct(nextAct))
             else
               const Text(
                 'The applause swells through the hall...',
-                style: TextStyle(
-                  fontFamily: 'Cinzel',
-                  fontSize: 12,
-                  letterSpacing: 2,
-                  color: Color(0xFFB89947),
-                ),
+                style: TextStyle(fontFamily: 'Cinzel', fontSize: 12, letterSpacing: 2, color: Color(0xFFB89947)),
               ),
           ],
         ),
@@ -1140,8 +1005,7 @@ class _GameScreenState extends State<GameScreen>
 
   Widget _buildFinale() {
     final total = _hits.perfect + _hits.good + _hits.miss;
-    final accuracy =
-        total > 0 ? ((_hits.perfect + _hits.good) / total * 100).round() : 0;
+    final accuracy = total > 0 ? ((_hits.perfect + _hits.good) / total * 100).round() : 0;
     final stars =
         accuracy >= 95
             ? 3
@@ -1181,23 +1045,14 @@ class _GameScreenState extends State<GameScreen>
                 shadows: [
                   Shadow(color: Color(0xFFB89947), blurRadius: 22),
                   Shadow(color: Color(0xFFB89947), blurRadius: 50),
-                  Shadow(
-                    color: Colors.black,
-                    offset: Offset(2, 3),
-                    blurRadius: 6,
-                  ),
+                  Shadow(color: Colors.black, offset: Offset(2, 3), blurRadius: 6),
                 ],
               ),
             ),
             const SizedBox(height: 6),
             const Text(
               'Il Sipario Cade  ·  The Curtain Falls',
-              style: TextStyle(
-                fontStyle: FontStyle.italic,
-                fontSize: 14,
-                letterSpacing: 2,
-                color: Color(0xFFB89947),
-              ),
+              style: TextStyle(fontStyle: FontStyle.italic, fontSize: 14, letterSpacing: 2, color: Color(0xFFB89947)),
             ),
             const SizedBox(height: 20),
             // Stars row
@@ -1211,21 +1066,12 @@ class _GameScreenState extends State<GameScreen>
                     i < stars ? '★' : '☆',
                     style: TextStyle(
                       fontSize: 40,
-                      color:
-                          i < stars
-                              ? const Color(0xFFFFD700)
-                              : const Color(0xFF444433),
+                      color: i < stars ? const Color(0xFFFFD700) : const Color(0xFF444433),
                       shadows:
                           i < stars
                               ? const [
-                                Shadow(
-                                  color: Color(0xFFFFD700),
-                                  blurRadius: 14,
-                                ),
-                                Shadow(
-                                  color: Color(0xFFFFD700),
-                                  blurRadius: 30,
-                                ),
+                                Shadow(color: Color(0xFFFFD700), blurRadius: 14),
+                                Shadow(color: Color(0xFFFFD700), blurRadius: 30),
                               ]
                               : null,
                     ),
@@ -1236,12 +1082,7 @@ class _GameScreenState extends State<GameScreen>
             const SizedBox(height: 8),
             Text(
               rank,
-              style: const TextStyle(
-                fontFamily: 'Cinzel',
-                fontSize: 18,
-                letterSpacing: 6,
-                color: Color(0xFFB89947),
-              ),
+              style: const TextStyle(fontFamily: 'Cinzel', fontSize: 18, letterSpacing: 6, color: Color(0xFFB89947)),
             ),
             const SizedBox(height: 24),
             // Final score card
@@ -1251,20 +1092,13 @@ class _GameScreenState extends State<GameScreen>
               decoration: BoxDecoration(
                 color: Colors.black.withValues(alpha: 0.7),
                 border: Border.all(color: const Color(0xFFB89947), width: 1),
-                boxShadow: const [
-                  BoxShadow(color: Color(0x44B89947), blurRadius: 30),
-                ],
+                boxShadow: const [BoxShadow(color: Color(0x44B89947), blurRadius: 30)],
               ),
               child: Column(
                 children: [
                   const Text(
                     'FINAL SCORE',
-                    style: TextStyle(
-                      fontFamily: 'Cinzel',
-                      fontSize: 11,
-                      letterSpacing: 4,
-                      color: Color(0xFFB89947),
-                    ),
+                    style: TextStyle(fontFamily: 'Cinzel', fontSize: 11, letterSpacing: 4, color: Color(0xFFB89947)),
                   ),
                   const SizedBox(height: 10),
                   Text(
@@ -1274,35 +1108,17 @@ class _GameScreenState extends State<GameScreen>
                       fontSize: 52,
                       fontWeight: FontWeight.w900,
                       color: Color(0xFFFDF5A9),
-                      shadows: [
-                        Shadow(color: Color(0xFFB89947), blurRadius: 16),
-                      ],
+                      shadows: [Shadow(color: Color(0xFFB89947), blurRadius: 16)],
                     ),
                   ),
                   const Divider(color: Color(0x44B89947), height: 24),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      _finaleStat(
-                        'PERFECT',
-                        _hits.perfect.toString(),
-                        const Color(0xFF90EE90),
-                      ),
-                      _finaleStat(
-                        'GOOD',
-                        _hits.good.toString(),
-                        const Color(0xFFFDF5A9),
-                      ),
-                      _finaleStat(
-                        'MISS',
-                        _hits.miss.toString(),
-                        const Color(0xFFFF6B6B),
-                      ),
-                      _finaleStat(
-                        'ACCURACY',
-                        '$accuracy%',
-                        const Color(0xFFB89947),
-                      ),
+                      _finaleStat('PERFECT', _hits.perfect.toString(), const Color(0xFF90EE90)),
+                      _finaleStat('GOOD', _hits.good.toString(), const Color(0xFFFDF5A9)),
+                      _finaleStat('MISS', _hits.miss.toString(), const Color(0xFFFF6B6B)),
+                      _finaleStat('ACCURACY', '$accuracy%', const Color(0xFFB89947)),
                     ],
                   ),
                 ],
@@ -1318,12 +1134,7 @@ class _GameScreenState extends State<GameScreen>
             else
               const Text(
                 'The applause swells through the hall...',
-                style: TextStyle(
-                  fontFamily: 'Cinzel',
-                  fontSize: 12,
-                  letterSpacing: 2,
-                  color: Color(0xFFB89947),
-                ),
+                style: TextStyle(fontFamily: 'Cinzel', fontSize: 12, letterSpacing: 2, color: Color(0xFFB89947)),
               ),
             const SizedBox(height: 20),
             _ornamentDivider(),
@@ -1336,24 +1147,9 @@ class _GameScreenState extends State<GameScreen>
   Widget _finaleStat(String label, String value, Color color) {
     return Column(
       children: [
-        Text(
-          value,
-          style: TextStyle(
-            fontFamily: 'Cinzel',
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
-        ),
+        Text(value, style: TextStyle(fontFamily: 'Cinzel', fontSize: 22, fontWeight: FontWeight.bold, color: color)),
         const SizedBox(height: 4),
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 10,
-            letterSpacing: 1.5,
-            color: Color(0xFF888877),
-          ),
-        ),
+        Text(label, style: const TextStyle(fontSize: 10, letterSpacing: 1.5, color: Color(0xFF888877))),
       ],
     );
   }
@@ -1368,20 +1164,13 @@ class _GameScreenState extends State<GameScreen>
       decoration: BoxDecoration(
         color: Colors.black,
         border: Border.all(color: color, width: 1.5),
-        boxShadow: [
-          BoxShadow(color: color.withValues(alpha: 0.4), blurRadius: 8),
-        ],
+        boxShadow: [BoxShadow(color: color.withValues(alpha: 0.4), blurRadius: 8)],
       ),
       child: Text(char, style: TextStyle(fontSize: 20, color: color)),
     );
   }
 
-  Widget _scoreRow(
-    String label,
-    String value,
-    Color color, {
-    bool large = false,
-  }) {
+  Widget _scoreRow(String label, String value, Color color, {bool large = false}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -1401,9 +1190,7 @@ class _GameScreenState extends State<GameScreen>
             fontSize: large ? 28 : 18,
             fontWeight: FontWeight.bold,
             color: color,
-            shadows: [
-              Shadow(color: color.withValues(alpha: 0.5), blurRadius: 8),
-            ],
+            shadows: [Shadow(color: color.withValues(alpha: 0.5), blurRadius: 8)],
           ),
         ),
       ],
@@ -1417,10 +1204,7 @@ class _GameScreenState extends State<GameScreen>
         Container(width: 60, height: 1, color: const Color(0xFFB89947)),
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 10),
-          child: Text(
-            '✦',
-            style: TextStyle(fontSize: 14, color: Color(0xFFB89947)),
-          ),
+          child: Text('✦', style: TextStyle(fontSize: 14, color: Color(0xFFB89947))),
         ),
         Container(width: 60, height: 1, color: const Color(0xFFB89947)),
       ],
@@ -1434,12 +1218,7 @@ class _GameScreenState extends State<GameScreen>
         backgroundColor: const Color(0xFFB89947),
         foregroundColor: const Color(0xFF1A0000),
         padding: const EdgeInsets.symmetric(horizontal: 44, vertical: 16),
-        textStyle: const TextStyle(
-          fontFamily: 'Cinzel',
-          fontSize: 15,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 3,
-        ),
+        textStyle: const TextStyle(fontFamily: 'Cinzel', fontSize: 15, fontWeight: FontWeight.bold, letterSpacing: 3),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(1)),
         elevation: 10,
         shadowColor: const Color(0xFFB89947),

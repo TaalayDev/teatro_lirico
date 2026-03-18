@@ -83,6 +83,47 @@ const tracks = <Track>[
     timpani: ['0:0', '2:0'],
   ),
 
+  // ─── La Serenata ── F major, 80 BPM, EASY-MED · CLASSIC ────────────────────
+  // A graceful serenade bridging the two easy acts.  Flowing phrases with
+  // lyrical leaps, a long half-note sigh in m1, and a gentle closing cascade.
+  Track(
+    name: 'La Serenata',
+    bpm: 80,
+    loops: 4,
+    color: Color(0xFF4CC9A0), // soft teal — warmth of an evening garden
+    theme: StageTheme.classic,
+    melody: [
+      MelodyEvent('0:0', 'F5', '4n'), // lane 2
+      MelodyEvent('0:1', 'A5', '4n'), // lane 1
+      MelodyEvent('0:2', 'C6', '4n'), // lane 3
+      MelodyEvent('0:3', 'A5', '4n'), // lane 1
+      MelodyEvent('1:0', 'G5', '4n'), // lane 3
+      MelodyEvent('1:1', 'F5', '2n'), // lane 2  (held sigh — 2 beats)
+      MelodyEvent('1:3', 'D5', '4n'), // lane 0
+      MelodyEvent('2:0', 'E5', '4n'), // lane 1
+      MelodyEvent('2:1', 'G5', '4n'), // lane 3
+      MelodyEvent('2:2', 'Bb5', '4n'), // lane 2
+      MelodyEvent('2:3', 'A5', '4n'), // lane 1
+      MelodyEvent('3:0', 'C6', '4n'), // lane 3
+      MelodyEvent('3:1', 'Bb5', '4n'), // lane 2
+      MelodyEvent('3:2', 'A5', '4n'), // lane 1
+      MelodyEvent('3:3', 'F5', '4n'), // lane 2
+    ],
+    chords: [
+      ChordEvent('0:0', ['F3', 'A3', 'C4', 'F4'], '1m'), // F
+      ChordEvent('1:0', ['D3', 'F3', 'A3', 'D4'], '1m'), // Dm
+      ChordEvent('2:0', ['Bb2', 'D3', 'F3', 'Bb3'], '1m'), // Bb
+      ChordEvent('3:0', ['C3', 'E3', 'G3', 'Bb3'], '1m'), // C7
+    ],
+    brass: [
+      BrassEvent('0:0', ['F2', 'C3', 'F3'], '1m'),
+      BrassEvent('1:0', ['D2', 'A2', 'D3'], '1m'),
+      BrassEvent('2:0', ['Bb1', 'F2', 'Bb2'], '1m'),
+      BrassEvent('3:0', ['C2', 'G2', 'C3'], '1m'),
+    ],
+    timpani: ['0:0', '2:0'],
+  ),
+
   // ─── Act III · Sotto La Luna ── G minor, 84 BPM, MEDIUM · CLASSIC ──
   // A moonlit bridge act with smoother phrasing and wider melodic arcs.
   Track(
@@ -208,6 +249,51 @@ const tracks = <Track>[
     timpani: ['0:0', '0:2', '1:0', '1:2', '2:0', '2:2', '3:0', '3:2'],
   ),
 
+  // ─── La Tempesta ── E minor, 107 BPM, MED-HARD · GOTHIC ────────────────────
+  // A squalling storm aria.  Relentless quarter-note drive, wide lane leaps,
+  // and an Em→C→G→Am descent that builds intensity toward the hard acts.
+  Track(
+    name: 'La Tempesta',
+    bpm: 107,
+    loops: 5,
+    color: Color(0xFF3D56B2), // thundercloud blue
+    theme: StageTheme.gothic,
+    melody: [
+      MelodyEvent('0:0', 'G5', '4n'), // lane 3
+      MelodyEvent('0:1', 'E5', '4n'), // lane 1
+      MelodyEvent('0:2', 'D5', '4n'), // lane 0
+      MelodyEvent('0:3', 'G5', '4n'), // lane 3
+      MelodyEvent('1:0', 'B5', '4n'), // lane 2
+      MelodyEvent('1:1', 'A5', '4n'), // lane 1
+      MelodyEvent('1:2', 'G5', '4n'), // lane 3
+      MelodyEvent('1:3', 'F#5', '4n'), // lane 2
+      MelodyEvent('2:0', 'E5', '4n'), // lane 1
+      MelodyEvent('2:1', 'G5', '4n'), // lane 3
+      MelodyEvent('2:2', 'A5', '4n'), // lane 1
+      MelodyEvent('2:3', 'B5', '4n'), // lane 2
+      MelodyEvent('3:0', 'C6', '4n'), // lane 3
+      MelodyEvent('3:1', 'B5', '4n'), // lane 2
+      MelodyEvent('3:2', 'A5', '4n'), // lane 1
+      MelodyEvent('3:3', 'E5', '4n'), // lane 1
+    ],
+    chords: [
+      ChordEvent('0:0', ['E3', 'G3', 'B3', 'E4'], '1m'), // Em
+      ChordEvent('1:0', ['C3', 'E3', 'G3', 'C4'], '1m'), // C
+      ChordEvent('2:0', ['G3', 'B3', 'D4', 'G4'], '1m'), // G
+      ChordEvent('3:0', ['A2', 'E3', 'A3', 'C4'], '1m'), // Am
+    ],
+    brass: [
+      BrassEvent('0:0', ['E2', 'B2', 'E3'], '2n'),
+      BrassEvent('0:2', ['G2', 'D3'], '2n'),
+      BrassEvent('1:0', ['C2', 'G2', 'C3'], '2n'),
+      BrassEvent('1:2', ['C2', 'E2', 'G2'], '2n'),
+      BrassEvent('2:0', ['G2', 'D3', 'G3'], '2n'),
+      BrassEvent('2:2', ['G2', 'B2', 'D3'], '2n'),
+      BrassEvent('3:0', ['A2', 'E3', 'A3'], '1m'),
+    ],
+    timpani: ['0:0', '0:2', '1:0', '1:2', '2:0', '2:2', '3:0', '3:2'],
+  ),
+
   // ─── Act VI · Ballo delle Maschere ── C minor, 110 BPM, HARD · GOTHIC ──
   // A tense masked dance with alternating leaps and response phrases.
   Track(
@@ -292,6 +378,52 @@ const tracks = <Track>[
       BrassEvent('3:0', ['G1', 'D2', 'G2', 'B2'], '1m'),
     ],
     timpani: ['0:0', '0:2', '1:0', '1:2', '2:0', '2:2', '3:0', '3:2'],
+  ),
+
+  // ─── L'Alba di Ferro ── F# minor, 122 BPM, HARD+ · STEAMPUNK ───────────────
+  // Iron dawn — an industrial ascent.  Ascending/descending F# minor runs
+  // with 10 timpani hits and punchy brass every half-measure.  Bridges the
+  // hard acts into the relentless very-hard territory.
+  Track(
+    name: "L'Alba di Ferro",
+    bpm: 122,
+    loops: 5,
+    color: Color(0xFFD4773A), // hammered copper
+    theme: StageTheme.steampunk,
+    melody: [
+      MelodyEvent('0:0', 'F#5', '4n'), // lane 2
+      MelodyEvent('0:1', 'A5', '4n'),  // lane 1
+      MelodyEvent('0:2', 'C#6', '4n'), // lane 3
+      MelodyEvent('0:3', 'E6', '4n'),  // lane 1
+      MelodyEvent('1:0', 'D6', '4n'),  // lane 0
+      MelodyEvent('1:1', 'C#6', '4n'), // lane 3
+      MelodyEvent('1:2', 'B5', '4n'),  // lane 2
+      MelodyEvent('1:3', 'A5', '4n'),  // lane 1
+      MelodyEvent('2:0', 'G#5', '4n'), // lane 3
+      MelodyEvent('2:1', 'B5', '4n'),  // lane 2
+      MelodyEvent('2:2', 'D6', '4n'),  // lane 0
+      MelodyEvent('2:3', 'A5', '4n'),  // lane 1
+      MelodyEvent('3:0', 'E6', '4n'),  // lane 1
+      MelodyEvent('3:1', 'C#6', '4n'), // lane 3
+      MelodyEvent('3:2', 'A5', '4n'),  // lane 1
+      MelodyEvent('3:3', 'F#5', '4n'), // lane 2
+    ],
+    chords: [
+      ChordEvent('0:0', ['F#3', 'A3', 'C#4', 'F#4'], '1m'), // F#m
+      ChordEvent('1:0', ['D3', 'F#3', 'A3', 'D4'], '1m'),   // D
+      ChordEvent('2:0', ['A2', 'E3', 'A3', 'C#4'], '1m'),   // A
+      ChordEvent('3:0', ['E3', 'G#3', 'B3', 'E4'], '1m'),   // E
+    ],
+    brass: [
+      BrassEvent('0:0', ['F#2', 'C#3', 'F#3'], '2n'),
+      BrassEvent('0:2', ['A2', 'E3'], '2n'),
+      BrassEvent('1:0', ['D2', 'A2', 'D3'], '2n'),
+      BrassEvent('1:2', ['D2', 'F#2', 'A2'], '2n'),
+      BrassEvent('2:0', ['A1', 'E2', 'A2'], '2n'),
+      BrassEvent('2:2', ['A1', 'C#2', 'E2'], '2n'),
+      BrassEvent('3:0', ['E2', 'B2', 'E3', 'G#3'], '1m'),
+    ],
+    timpani: ['0:0', '0:1', '0:2', '1:0', '1:2', '2:0', '2:1', '2:2', '3:0', '3:2'],
   ),
 
   // ─── Act VI · La Caduta degli Dei ── B minor, 130 BPM, VERY HARD · STEAMPUNK
