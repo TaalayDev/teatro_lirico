@@ -72,6 +72,7 @@ class BrassEvent {
 // ─── Track / Act ──────────────────────────────────────────────
 class Track {
   final String name;
+  final String subtitle;
   final int bpm;
   final Color color;
   final StageTheme theme;
@@ -86,6 +87,7 @@ class Track {
 
   const Track({
     required this.name,
+    this.subtitle = '',
     required this.bpm,
     required this.color,
     this.theme = StageTheme.classic,
@@ -105,10 +107,15 @@ class Particle {
   double size;
   final Color color;
 
-  Particle({required this.x, required this.y, required this.color, required double speed, required this.size})
-    : vx = (0.5 - _nextRandom()) * speed,
-      vy = (0.5 - _nextRandom()) * speed,
-      life = 1.0;
+  Particle({
+    required this.x,
+    required this.y,
+    required this.color,
+    required double speed,
+    required this.size,
+  }) : vx = (0.5 - _nextRandom()) * speed,
+       vy = (0.5 - _nextRandom()) * speed,
+       life = 1.0;
 
   static int _seed = 42;
   static double _nextRandom() {
@@ -130,7 +137,12 @@ class FeedbackText {
   final Color color;
   double life;
 
-  FeedbackText({required this.text, required this.x, required this.y, required this.color}) : life = 1.0;
+  FeedbackText({
+    required this.text,
+    required this.x,
+    required this.y,
+    required this.color,
+  }) : life = 1.0;
 
   void update() {
     y -= 1;
